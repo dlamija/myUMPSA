@@ -1,6 +1,0 @@
-# Hashes of file build rules.
-a5d9525f7cca7e2d9fa982fafea3d4ab .qt/qml_imports/myUMPSA_build.cmake
-4a2a7603265c83f5d54e5c1e759a4db6 CMakeFiles/myUMPSA_autogen
-4a2a7603265c83f5d54e5c1e759a4db6 CMakeFiles/myUMPSA_qmlimportscan
-5bf4668bfc83eeb3fb967146c1f3ff96 myUMPSA_autogen/EWIEGA46WW/qrc_Resources.cpp
-5e6f463d6bf6bc3463c8881372335b46 myUMPSA_autogen/timestamp

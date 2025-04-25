@@ -1,9 +1,0 @@
--rootPath
-/Users/dlamija/Sandbox/cursor/myUMPSA
--cmake-output
--output-file
-/Users/dlamija/Sandbox/cursor/myUMPSA/build/.qt/qml_imports/myUMPSA_conf.cmake
--importPath
-/Users/dlamija/Sandbox/cursor/myUMPSA/build
--importPath
-/opt/local/libexec/qt6/qml
