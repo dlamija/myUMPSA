@@ -1,0 +1,10 @@
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/myUMPSA.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/myUMPSA_qmlimportscan.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/edit_cache.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/rebuild_cache.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/list_install_components.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/install.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/install/local.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/install/strip.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/myUMPSA_autogen_timestamp_deps.dir
+/Users/dlamija/Sandbox/cursor/myUMPSA/build/CMakeFiles/myUMPSA_autogen.dir

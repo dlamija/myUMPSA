@@ -1,0 +1,27 @@
+# Build directories
+build/
+*.build/
+*.build-debug/
+*.build-release/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+
+# Qt specific
+*.pro.user
+*.qmlc
+*.jsc
+*.qmlproject.user
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# IDE specific
+.vscode/
+.idea/
+*.user 

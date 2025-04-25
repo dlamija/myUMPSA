@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/icon.icns</file>
+        <file>images/icon2.icns</file>
+        <file>images/myUMPSA.icns</file>
+        <file>images/new.png</file>
+    </qresource>
+</RCC>
