@@ -12,6 +12,7 @@
 #include <QWebEngineView>
 #include <QWebEngineProfile>
 #include <QWebEngineCookieStore>
+#include <QDir>
 
 
 
@@ -235,7 +236,6 @@ void EcommUMPSA::checkAttendance()
 
 }
 
-
 void EcommUMPSA::getInitialCookies()
 {
     QUrl url("https://ecomm.ump.edu.my");
@@ -269,4 +269,88 @@ void EcommUMPSA::login(const QString &username, const QString &password)
 
     QNetworkReply *reply = networkManager->post(request, params.query(QUrl::FullyEncoded).toUtf8());
     connect(reply, &QNetworkReply::finished, this, &EcommUMPSA::onLoginSlot);
+}
+
+void EcommUMPSA::openImsAcademic()
+{
+    qDebug() << Q_FUNC_INFO;
+    const QString link = "https://ecomm.ump.edu.my/cmsformlink.jsp";
+
+    QUrlQuery urlQuery;
+    urlQuery.addQueryItem("form", "IMS_ACADSYS_LOGON");
+    
+    QUrl url = QUrl(link);
+    QNetworkRequest networkRequest(url);
+
+    connect(networkManager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
+            this, SLOT(onSslError(QNetworkReply*, QList<QSslError>)));
+
+    connect(networkManager, SIGNAL(finished(QNetworkReply*)),
+            this, SLOT(onImsAcademicSlot(QNetworkReply*)));
+
+    networkRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    networkManager->post(networkRequest, urlQuery.toString(QUrl::FullyEncoded).toUtf8());
+
+}
+
+QString EcommUMPSA::getJnlpPath()
+{
+    // Get the application directory path
+    QString appPath = QCoreApplication::applicationDirPath();
+    
+    #ifdef Q_OS_MAC
+        // On macOS, we need to go up to Contents and then to Resources
+        // From: myUMPSA.app/Contents/MacOS/
+        // To:   myUMPSA.app/Contents/Resources/
+        QDir dir(appPath);
+        dir.cdUp(); // go up from MacOS to Contents
+        dir.cd("Resources"); // go into Resources
+        return dir.filePath("frmservlet.jnlp");
+    #else
+        // For other platforms, Resources is directly in the executable directory
+        return appPath + "/Resources/frmservlet.jnlp";
+    #endif
+}
+
+void EcommUMPSA::onImsAcademicSlot(QNetworkReply *reply)
+{
+    qDebug() << Q_FUNC_INFO;
+    if (reply->error() == QNetworkReply::NoError) {
+        QString responseText = reply->readAll();
+        
+        // Extract the URL using regex
+        QRegularExpression re("window\\.open\\(\"(https://student\\.ump\\.edu\\.my/forms/frmservlet\\?[^\"]+)\"");
+        QRegularExpressionMatch match = re.match(responseText);
+        
+        if (match.hasMatch()) {
+            QString extractedUrl = match.captured(1);
+            qDebug() << "\t" << "Extracted URL:" << extractedUrl;
+            
+            // Extract username and session ID using regex
+            QRegularExpression paramsRe("cms_username=([^+]+)\\+cms_sessid=(\\d+-\\d+)");
+            QRegularExpressionMatch paramsMatch = paramsRe.match(extractedUrl);
+            
+            if (paramsMatch.hasMatch()) {
+                QString username = paramsMatch.captured(1);
+                QString sessionId = paramsMatch.captured(2);
+                qDebug() << "\t" << "Username:" << username;
+                qDebug() << "\t" << "Session ID:" << sessionId;
+                
+                // Get the JNLP file path
+                QString jnlpPath = getJnlpPath();
+                qDebug() << "\t" << "JNLP Path:" << jnlpPath;
+                
+                // Here you can use the jnlpPath to read and process the JNLP file
+                emit openImsAcademicSignal(username, sessionId);
+                
+            } else {
+                qDebug() << "\t" << "Failed to extract username and session ID from URL";
+            }
+        } else {
+            qDebug() << "Failed to extract URL from response";
+        }
+    } else {
+        qDebug() << "Initial request failed:" << reply->errorString();
+    }
+    reply->deleteLater();
 }

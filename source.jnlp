@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0"
+      xmlns:jfx="http://javafx.com"
+      codebase="https://student.ump.edu.my/forms/java">
+    <information>
+        <title>Oracle Forms Services</title>
+        <vendor>Oracle Corporation</vendor>
+        <homepage href="http://www.oracle.com"/>
+        <description>Oracle Forms Services with WebUtil applet launcher.</description>
+        <description kind="short">Oracle Forms Applet with WebUtil</description>
+    </information>
+    <security>
+        <all-permissions/>
+    </security>
+    <update check="always" policy="prompt-run"/>
+    <resources>
+        <!-- Application Resources -->
+        <j2se version="1.8" href="http://java.sun.com/products/autodl/j2se"/>
+        <jfx:javafx-runtime version="2.2+"/>
+        <jar href="/forms/java/frmall.jar" download="eager" main="true" />
+        <jar href="/forms/java/frmwebutil.jar" download="lazy" main="false" />
+        <extension name="Extensions" href="/forms/java/extensions.jnlp"/>
+    </resources>
+    <applet-desc
+    name="Oracle Forms"
+    main-class="oracle.forms.engine.Main"
+    height="1"
+    width="1">
+    <param name="serverURL" value="/forms/lservlet?ifcfs=/forms/frmservlet?config=academic&#38;form=IMS_ACADSYS_LOGON&#38;otherparams=cms_username=XxXxXxX+cms_sessid=HHHHHHHHHH-HHHHH&#38;ifsessid=&#38;acceptLanguage=en-gb"/>
+    <param name="height" value="100%"/>
+    <param name="width" value="100%"/>
+    <param name="networkRetries" value="60"/>
+    <param name="separateFrame" value="false"/>
+    <param name="splashScreen"  value="no"/>
+    <param name="background"  value="false"/>
+    <param name="lookAndFeel"  value="oracle"/>
+    <param name="colorScheme"  value="blaf"/>
+    <param name="customColorScheme"  value=""/>
+    <param name="serverApp" value="default"/>
+    <param name="logo" value=""/>
+    <param name="imageBase" value="codebase"/>
+    <param name="formsMessageListener" value=""/>
+    <param name="recordFileName" value=""/>
+    <param name="EndUserMonitoringEnabled" value="false"/>
+    <param name="EndUserMonitoringURL" value=""/>
+    <param name="heartBeat" value="89"/>
+    <param name="MaxEventWait" value=""/>
+    <param name="allowAlertClipboard" value="true"/>
+    <param name="disableValidateClipboard" value="false"/>
+    <param name="enableJavascriptEvent" value="true"/>
+    <param name="digitSubstitution" value="context"/>
+    <param name="legacy_lifecycle" value="false"/>
+    <param name="JavaScriptBlocksHeartBeat" value="false"/>
+    <param name="highContrast" value="false"/>
+    <param name="disableMDIScrollbars" value=""/>
+    <param name="clientDPI" value=""/>
+    <param name="applet_stop_timeout" value="800"/>
+    <param name="guiMode" value="0"/>
+    <param name="idleTimeout" value=""/>
+    <param name="ssoLogoutRedirect" value=""/>
+    <param name="ssoMode" value="false"/>
+    <param name="ssoLogout" value="false"/>
+    <param name="logoutTargetURLParamname" value=""/>
+    <param name="mediaBase" value="codebase"/>
+    <param name="webstartRequest" value="true"/>
+    <param name="webFormsTitle" value="Oracle Fusion Middleware Forms Services"/>
+    <param name="centerOnStartup" value=""/>
+    <param name="isResizable" value=""/>
+    <param name="alwaysOnTop" value=""/>
+    <param name="WebUtilLogging" value="off"/>
+    <param name="WebUtilLoggingDetail" value="normal"/>
+    <param name="WebUtilErrormode" value="Alert"/>
+    <param name="WebUtilDispatchMonitorInterval" value="5"/>
+    <param name="WebUtilTrustInternal" value="true"/>
+    <param name="WebUtilMaxTransferSize" value="16384"/>
+    <param name="WebUtilDateFormat" value=""/>
+    </applet-desc>
+</jnlp>

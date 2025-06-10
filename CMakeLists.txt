@@ -12,6 +12,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network WebEngineWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network WebEngineWidgets)
 
+# Add frmservlet.jnlp to resources
+set(RESOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/frmservlet.jnlp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/source.jnlp"
+)
+
 set(PROJECT_SOURCES
         main.cpp
         myumpsa.cpp
@@ -19,8 +25,11 @@ set(PROJECT_SOURCES
         myumpsa.ui
         staff.h
         staff.cpp
+)
 
-
+# Set properties for resource files
+set_source_files_properties(${RESOURCE_FILES}
+    PROPERTIES MACOSX_PACKAGE_LOCATION "Resources"
 )
 
 # NOTE: Don't include the path in MACOSX_BUNDLE_ICON_FILE -- this is
@@ -37,14 +46,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         ${APP_ICON_MACOSX}
-
+        ${RESOURCE_FILES}
         Resources.qrc
-
         ecommumpsa.h ecommumpsa.cpp
-
-
-
-
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET myUMPSA APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
