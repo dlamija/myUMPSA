@@ -24,6 +24,12 @@
 #include <QCoreApplication>
 #include <QTime>
 
+#ifdef Q_OS_MAC
+    // macOS bundle structure: myUMPSA.app/Contents/Resources/frmservlet.jnlp
+#else
+    // Other platforms: executable_dir/Resources/frmservlet.jnlp
+#endif
+
 myUMPSA::myUMPSA(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::myUMPSA)
@@ -56,6 +62,7 @@ myUMPSA::myUMPSA(QWidget *parent)
         connect(ecomm, &EcommUMPSA::attendantNotFound, this, &myUMPSA::attendantNotFoundSlot);
         connect(ecomm, &EcommUMPSA::checkInSignal, this, &myUMPSA::checkInSlot);
         connect(ecomm, &EcommUMPSA::checkOutSignal, this, &myUMPSA::checkOutSlot);
+        connect(ecomm, &EcommUMPSA::openImsAcademicSignal, this, &myUMPSA::imsAcademicSlot);
     }
 }
 
@@ -117,6 +124,9 @@ void myUMPSA::createActions()
     checkmemo_action = new QAction(tr("Check &Memo"), this);
     connect(checkmemo_action, &QAction::triggered, this, &myUMPSA::checkMemo);
 
+    ims_action = new QAction(tr("&IMS Academic"),this);
+    connect(ims_action, &QAction::triggered, this, &myUMPSA::imsAcademic);
+
     checkin_action = new QAction(tr("Check &In"), this);
     connect(checkin_action, &QAction::triggered, this, &myUMPSA::checkInUMPSA);
 
@@ -138,6 +148,7 @@ void myUMPSA::createTrayIcon()
     trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(login_action);
     trayIconMenu->addAction(checkmemo_action);
+    trayIconMenu->addAction(ims_action);
 
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(checkin_action);
@@ -465,13 +476,6 @@ void myUMPSA::getCookiesSlot(QNetworkReply *reply)
     }
     reply->deleteLater();
 
-    // QString link= "https://ecomm.ump.edu.my/";
-    // QUrl url = QUrl(link);
-    // QList<QNetworkCookie> cookies = cookieJar->cookiesForUrl(url);
-    // qDebug() << "\tCookies:";
-    // for (const QNetworkCookie &cookie : cookies) {
-    //     qDebug() << "\t" << cookie.name() << "=" << cookie.value();
-    // }
 }
 
 void myUMPSA::checkedInSlot(QString time)
@@ -500,3 +504,47 @@ void myUMPSA::attendantNotFoundSlot()
     }
 }
 
+void myUMPSA::imsAcademic()
+{
+    qDebug() << Q_FUNC_INFO;
+    ecomm->openImsAcademic();
+}
+
+void myUMPSA::imsAcademicSlot(QString username, QString sessionId)
+{
+    qDebug() << Q_FUNC_INFO;
+    qDebug() << "Username:" << username;
+    qDebug() << "Session ID:" << sessionId;
+    QString jnlpPath = QCoreApplication::applicationDirPath() + "/../Resources/frmservlet.jnlp";
+    QString jnlpPathSource = QCoreApplication::applicationDirPath() + "/../Resources/source.jnlp";
+
+    QFile jnlpFile(jnlpPath);
+    QFile jnlpFileSource(jnlpPathSource);
+    if (!jnlpFileSource.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open JNLP file:" << jnlpPathSource;
+        return;
+    }
+
+    QString jnlpContent = jnlpFileSource.readAll();
+    jnlpFileSource.close();
+
+    // Replace placeholders with actual username and session ID
+    jnlpContent.replace("XxXxXxX", username);
+    jnlpContent.replace("HHHHHHHHHH-HHHHH", sessionId);
+
+    // Write modified content back to temporary file
+    
+    if (!jnlpFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open JNLP file for writing:" << jnlpPath;
+        return;
+    }
+    QTextStream out(&jnlpFile);
+    out << jnlpContent;
+    jnlpFile.close();
+    // Open the JNLP file with the system's default handler
+    #ifdef Q_OS_WIN
+        QProcess::startDetached("javaws", QStringList() << jnlpPath);
+    #else
+        QDesktopServices::openUrl(QUrl::fromLocalFile(jnlpPath));
+    #endif
+}

@@ -85,3 +85,13 @@ void Staff::setCheckInTime(const QTime &newCheckInTime)
 {
     m_checkInTime = newCheckInTime;
 }
+
+QString Staff::sessionId() const
+{
+    return m_sessionId;
+}
+
+void Staff::setSessionId(const QString &newSessionId)
+{
+    m_sessionId = newSessionId;
+}

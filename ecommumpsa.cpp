@@ -274,8 +274,12 @@ void EcommUMPSA::login(const QString &username, const QString &password)
 void EcommUMPSA::openImsAcademic()
 {
     qDebug() << Q_FUNC_INFO;
-    const QString link = "https://ecomm.ump.edu.my/cmsformlink.jsp";
 
+    // Relogin before request ims
+    this->login(user, pass);
+
+
+    const QString link = "https://ecomm.ump.edu.my/cmsformlink.jsp";
     QUrlQuery urlQuery;
     urlQuery.addQueryItem("form", "IMS_ACADSYS_LOGON");
     

@@ -46,6 +46,7 @@ private:
     QAction *configure_action;
     QAction *quitAction;
     QAction *testAction;
+    QAction *ims_action;
 
     // Constants
     static const QRegularExpression re;
@@ -68,6 +69,8 @@ private slots:
     void checkMemo();
     void checkInUMPSA();
     void checkOutUMPSA();
+    void imsAcademic();
+
     void on_pushButtonSave_clicked();
 
     // Network response slots
@@ -77,6 +80,7 @@ private slots:
     void dnsResults();
     void getCookiesSlot(QNetworkReply *reply);
     void checkedInSlot(QString time);
+    void imsAcademicSlot(QString username, QString sessionId);
 
     // Attendant related slots
     void attendantSlot(QString time);

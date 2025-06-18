@@ -34,12 +34,16 @@ public:
     void setIsCheckedIn(bool newIsCheckedIn);
     void setCheckInTime(const QTime &newCheckInTime);
 
+    QString sessionId() const;
+    void setSessionId(const QString &newSessionId);
+
 signals:
 
 private:
     // Authentication
     QString m_username;
     QString m_password;
+    QString m_sessionId;
 
     // Status flags
     bool m_isInUMPSA = false;
