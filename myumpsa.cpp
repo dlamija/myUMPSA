@@ -34,8 +34,6 @@ myUMPSA::myUMPSA(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::myUMPSA)
 {
-    staff = new Staff();
-
     ui->setupUi(this);
     this->readSettings();
     this->createActions();
@@ -43,8 +41,7 @@ myUMPSA::myUMPSA(QWidget *parent)
     this->setIcon();
     trayIcon->show();
 
-
-
+    staff = new Staff();
     staff->setIsInUMPSA(this->lookupUMPDNS());
     dns = new QDnsLookup(this);
 
@@ -110,10 +107,6 @@ void myUMPSA::readSettings()
     if(disableOutside){
         ui->checkBoxDisableOutside->setCheckState(Qt::Checked);
     }
-
-    //qDebug() << Q_FUNC_INFO << "username:" << staff->getUsername();
-    //qDebug() << Q_FUNC_INFO << "password:" << staff->getPassword() << Qt::endl;
-
 }
 
 void myUMPSA::createActions()
