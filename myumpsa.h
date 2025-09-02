@@ -12,8 +12,9 @@ class QDnsLookup;
 class QNetworkReply;
 
 QT_BEGIN_NAMESPACE
-namespace Ui {
-class myUMPSA;
+namespace Ui
+{
+    class myUMPSA;
 }
 QT_END_NAMESPACE
 
@@ -70,7 +71,6 @@ private slots:
     void checkInUMPSA();
     void checkOutUMPSA();
     void imsAcademic();
-
     void on_pushButtonSave_clicked();
 
     // Network response slots
@@ -83,7 +83,7 @@ private slots:
     void imsAcademicSlot(QString username, QString sessionId);
 
     // Attendant related slots
-    void attendantSlot(QString time);
+    void attendantSlot(QString time, QString ip, QString location);
     void attendantNotFoundSlot();
 };
 

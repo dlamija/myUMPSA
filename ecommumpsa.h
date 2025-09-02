@@ -41,11 +41,12 @@ public:
     void openImsAcademic();
 
 signals:
-    void attendantFound(QString time);
+    void attendantFound(QString time, QString ip, QString location);
     void attendantNotFound();
     void checkInSignal(QNetworkReply *reply);
     void checkOutSignal(QNetworkReply *reply);
     void openImsAcademicSignal(QString username, QString sessionId);
+    //void saveStaffAttendanceSignal(QString checkInTime, QString checkInIp, QString checkInLocation);
 };
 
 #endif // ECOMMUMPSA_H

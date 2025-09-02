@@ -25,15 +25,16 @@
 #include <QTime>
 
 #ifdef Q_OS_MAC
-    // macOS bundle structure: myUMPSA.app/Contents/Resources/frmservlet.jnlp
+// macOS bundle structure: myUMPSA.app/Contents/Resources/frmservlet.jnlp
 #else
-    // Other platforms: executable_dir/Resources/frmservlet.jnlp
+// Other platforms: executable_dir/Resources/frmservlet.jnlp
 #endif
 
 myUMPSA::myUMPSA(QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::myUMPSA)
+    : QDialog(parent), ui(new Ui::myUMPSA)
 {
+    staff = new Staff();
+
     ui->setupUi(this);
     this->readSettings();
     this->createActions();
@@ -41,25 +42,28 @@ myUMPSA::myUMPSA(QWidget *parent)
     this->setIcon();
     trayIcon->show();
 
-    staff = new Staff();
     staff->setIsInUMPSA(this->lookupUMPDNS());
     dns = new QDnsLookup(this);
 
-    //Periodic DNS check
+    // Periodic DNS check
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &myUMPSA::checkIPChanged);
     timer->start(2 * 60000); // 2 minutes
 
-    //get user info if not prev data saved
-    if (staff->username().isEmpty()){
+    // get user info if not prev data saved
+    if (staff->username().isEmpty())
+    {
         this->show();
-    } else {
+    }
+    else
+    {
         ecomm = new EcommUMPSA(staff->username(), staff->password());
         connect(ecomm, &EcommUMPSA::attendantFound, this, &myUMPSA::attendantSlot);
         connect(ecomm, &EcommUMPSA::attendantNotFound, this, &myUMPSA::attendantNotFoundSlot);
         connect(ecomm, &EcommUMPSA::checkInSignal, this, &myUMPSA::checkInSlot);
         connect(ecomm, &EcommUMPSA::checkOutSignal, this, &myUMPSA::checkOutSlot);
         connect(ecomm, &EcommUMPSA::openImsAcademicSignal, this, &myUMPSA::imsAcademicSlot);
+        // connect(ecomm, &EcommUMPSA::saveStaffAttendanceSignal, this, &myUMPSA::checkedInSlot);
     }
 }
 
@@ -77,7 +81,6 @@ void myUMPSA::readSettings()
     bool autoCheckIn;
     bool disableCheckOut;
     bool disableOutside;
-
 
     settings.beginGroup("Login");
     username = *new QString(QByteArray::fromBase64(settings.value("username").toString().toUtf8()));
@@ -98,15 +101,21 @@ void myUMPSA::readSettings()
 
     ui->username->setText(username);
     ui->password->setText(password);
-    if(autoCheckIn){
+    if (autoCheckIn)
+    {
         ui->checkBoxCheckINAuto->setCheckState(Qt::Checked);
     }
-    if(disableCheckOut){
+    if (disableCheckOut)
+    {
         ui->checkBoxCheckOutBefore4pm->setCheckState(Qt::Checked);
     }
-    if(disableOutside){
+    if (disableOutside)
+    {
         ui->checkBoxDisableOutside->setCheckState(Qt::Checked);
     }
+
+    // qDebug() << Q_FUNC_INFO << "username:" << staff->getUsername();
+    // qDebug() << Q_FUNC_INFO << "password:" << staff->getPassword() << Qt::endl;
 }
 
 void myUMPSA::createActions()
@@ -117,7 +126,7 @@ void myUMPSA::createActions()
     checkmemo_action = new QAction(tr("Check &Memo"), this);
     connect(checkmemo_action, &QAction::triggered, this, &myUMPSA::checkMemo);
 
-    ims_action = new QAction(tr("&IMS Academic"),this);
+    ims_action = new QAction(tr("&IMS Academic"), this);
     connect(ims_action, &QAction::triggered, this, &myUMPSA::imsAcademic);
 
     checkin_action = new QAction(tr("Check &In"), this);
@@ -126,13 +135,13 @@ void myUMPSA::createActions()
     checkout_action = new QAction(tr("Check &Out"), this);
     connect(checkout_action, &QAction::triggered, this, &myUMPSA::checkOutUMPSA);
 
-    configure_action = new QAction(tr("&Configure"),this);
+    configure_action = new QAction(tr("&Configure"), this);
     connect(configure_action, &QAction::triggered, this, &myUMPSA::show);
 
     quitAction = new QAction(tr("&Quit"), this);
     connect(quitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
 
-    testAction = new QAction(tr("&Test"),this);
+    testAction = new QAction(tr("&Test"), this);
     connect(testAction, &QAction::triggered, this, &myUMPSA::testFunc);
 }
 
@@ -146,7 +155,6 @@ void myUMPSA::createTrayIcon()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(checkin_action);
     trayIconMenu->addAction(checkout_action);
-
 
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(configure_action);
@@ -169,7 +177,8 @@ void myUMPSA::writeSettings(bool save_delete)
 {
     QSettings settings;
     qDebug() << "save or delete" << save_delete << Qt::endl;
-    if (save_delete) {
+    if (save_delete)
+    {
         settings.beginGroup("Login");
         settings.setValue("username", staff->username().toUtf8().toBase64());
         settings.setValue("password", staff->password().toUtf8().toBase64());
@@ -179,7 +188,9 @@ void myUMPSA::writeSettings(bool save_delete)
         settings.setValue("month", staff->disableCheckOut());
         settings.setValue("week", staff->disableOutside());
         settings.endGroup();
-    } else {
+    }
+    else
+    {
         settings.beginGroup("Login");
         settings.remove("");
         settings.endGroup();
@@ -193,22 +204,24 @@ void myUMPSA::writeSettings(bool save_delete)
 bool myUMPSA::lookupUMPDNS()
 {
     QString umpHostUrl = "umpsa.edu.my";
-    //Work differently with Apple Private Relay
-    QHostInfo umpHost = QHostInfo::fromName(umpHostUrl);    //QString("umpsa.edu.my");
+    // Work differently with Apple Private Relay
+    QHostInfo umpHost = QHostInfo::fromName(umpHostUrl); // QString("umpsa.edu.my");
 
-    if(umpHost.addresses().isEmpty()){ // No Network
-        qDebug() <<  Q_FUNC_INFO << "No Network!";
+    if (umpHost.addresses().isEmpty())
+    { // No Network
+        qDebug() << Q_FUNC_INFO << "No Network!";
         return false;
     }
 
     QHostAddress getHost = umpHost.addresses().first();
-    qDebug() <<  Q_FUNC_INFO << getHost.toString();
-    return(getHost.isInSubnet(QHostAddress::parseSubnet("172.16.0.0/16")));
+    qDebug() << Q_FUNC_INFO << getHost.toString();
+    return (getHost.isInSubnet(QHostAddress::parseSubnet("172.16.0.0/16")));
 }
 
 void myUMPSA::checkInUMPSA()
 {
-    if (!ecomm) {
+    if (!ecomm)
+    {
         qWarning() << "eComm not initialized";
         return;
     }
@@ -217,7 +230,8 @@ void myUMPSA::checkInUMPSA()
 
 void myUMPSA::checkOutUMPSA()
 {
-    if (!ecomm) {
+    if (!ecomm)
+    {
         qWarning() << "eComm not initialized";
         return;
     }
@@ -255,10 +269,12 @@ void myUMPSA::testFunc()
 void myUMPSA::loginEcommBrowser()
 {
     QTemporaryDir dir;
-    QString path = dir.path() +"/";
+    QString path = dir.path() + "/";
     QFile file("out.html");
-    if (dir.isValid()) {
-        if(QDir::setCurrent(dir.path())){
+    if (dir.isValid())
+    {
+        if (QDir::setCurrent(dir.path()))
+        {
             file.open(QIODevice::WriteOnly | QIODevice::Text);
             QTextStream out(&file);
             out << "<html>" << Qt::endl;
@@ -290,10 +306,15 @@ void myUMPSA::loginEcommBrowser()
 
 void myUMPSA::checkMemo()
 {
+    // check if still login
+
     const QString linkMemo = "https://ecomm.ump.edu.my/memo.jsp?action=folders&type=Y&folderID=1";
-    if (ecomm) {
+    if (ecomm)
+    {
         ecomm->openPath(linkMemo);
-    } else {
+    }
+    else
+    {
         qWarning() << "eComm not initialized";
     }
 }
@@ -312,19 +333,17 @@ void myUMPSA::on_pushButtonSave_clicked()
 
     ecomm = new EcommUMPSA(staff->username(), staff->password());
     connect(ecomm, &EcommUMPSA::attendantFound, this, &myUMPSA::attendantSlot);
-
 }
 
 void myUMPSA::checkInSlot(QNetworkReply *reply)
 {
     QRegularExpression re("[\n\t\r]");
 
-    qDebug() << Q_FUNC_INFO  << "In finish "<< Qt::endl;
-    if(reply->error())
+    qDebug() << Q_FUNC_INFO << "In finish " << Qt::endl;
+    if (reply->error())
     {
-        qDebug() << Q_FUNC_INFO  << "ERROR!";
-        qDebug() << Q_FUNC_INFO  << reply->errorString();
-
+        qDebug() << Q_FUNC_INFO << "ERROR!";
+        qDebug() << Q_FUNC_INFO << reply->errorString();
     }
     else
     {
@@ -332,42 +351,47 @@ void myUMPSA::checkInSlot(QNetworkReply *reply)
         QTextDocument doc;
         doc.setHtml(strdata);
         strdata = doc.toPlainText().remove(re).trimmed();
-        if (strdata.mid(1,1) == ' '){
-            strdata = strdata.mid(2,strdata.length());
+        if (strdata.mid(1, 1) == ' ')
+        {
+            strdata = strdata.mid(2, strdata.length());
         }
 
         QSystemTrayIcon::MessageIcon msgIcon = QSystemTrayIcon::MessageIcon(1);
 
-        if ( strdata.contains("Check in failed!") ){
-            //Wrong username or password
+        if (strdata.contains("Check in failed!"))
+        {
+            // Wrong username or password
             qDebug() << strdata;
             trayIcon->showMessage(QCoreApplication::applicationName() + ": Dear " + staff->username().toUpper(),
-                                 strdata, msgIcon, 5 * 1000);
-        } else if (strdata.contains("Check-in failed.")) {
+                                  strdata, msgIcon, 5 * 1000);
+        }
+        else if (strdata.contains("Check-in failed."))
+        {
             // Failed! already check in today
-            int indexN = strdata.indexOf("Check-in failed.",0,Qt::CaseSensitive);
-            QString name = strdata.mid(0,indexN-1).trimmed();
+            int indexN = strdata.indexOf("Check-in failed.", 0, Qt::CaseSensitive);
+            QString name = strdata.mid(0, indexN - 1).trimmed();
             strdata = strdata.mid(indexN, strdata.length());
-            qDebug() << "Check-in failed. : " +strdata;
+            qDebug() << "Check-in failed. : " + strdata;
 
             trayIcon->showMessage(name, strdata, msgIcon, 5 * 1000);
             staff->setIsCheckedIn(true);
             checkin_action->setEnabled(true);
             checkout_action->setEnabled(false);
-        } else {
+        }
+        else
+        {
             // Success!
             QString mark = "Selamat datang ";
-            int indexN = strdata.indexOf(mark,0,Qt::CaseSensitive) + mark.length();
-            int endN = strdata.indexOf(')',0,Qt::CaseSensitive) +1;
-            QString name = strdata.mid(indexN,endN-indexN).trimmed().toUpper();
-            strdata = strdata.mid(endN+1, strdata.length());
-            qDebug() << "Check-in successful : " +strdata;
+            int indexN = strdata.indexOf(mark, 0, Qt::CaseSensitive) + mark.length();
+            int endN = strdata.indexOf(')', 0, Qt::CaseSensitive) + 1;
+            QString name = strdata.mid(indexN, endN - indexN).trimmed().toUpper();
+            strdata = strdata.mid(endN + 1, strdata.length());
+            qDebug() << "Check-in successful : " + strdata;
 
             trayIcon->showMessage(name, strdata, msgIcon, 5 * 1000);
             staff->setIsCheckedIn(true);
             checkin_action->setEnabled(false);
             checkout_action->setEnabled(true);
-
         }
         reply->deleteLater();
     }
@@ -377,7 +401,7 @@ void myUMPSA::checkOutSlot(QNetworkReply *reply)
 {
     QRegularExpression re("[\n\t\r]");
 
-    if(reply->error())
+    if (reply->error())
     {
         qDebug() << "ERROR!";
         qDebug() << reply->errorString();
@@ -388,28 +412,34 @@ void myUMPSA::checkOutSlot(QNetworkReply *reply)
         QTextDocument doc;
         doc.setHtml(strdata);
         strdata = doc.toPlainText().remove(re).trimmed();
-        if (strdata.mid(1,1) == ' '){
-            strdata = strdata.mid(2,strdata.length());
+        if (strdata.mid(1, 1) == ' ')
+        {
+            strdata = strdata.mid(2, strdata.length());
         }
 
         QSystemTrayIcon::MessageIcon msgIcon = QSystemTrayIcon::MessageIcon(1);
-        if (strdata == "Check out failed!.") {
+        if (strdata == "Check out failed!.")
+        {
             // Check out failed!
             qDebug() << strdata;
             trayIcon->showMessage(QCoreApplication::applicationName() + ": Check Out",
                                   "Dear " + staff->username() + ", " + strdata,
                                   msgIcon, 5 * 1000);
-        } else if (strdata.contains("Check-out failed.")) {
+        }
+        else if (strdata.contains("Check-out failed."))
+        {
             // Check out failed not check in
             QString checkOutFailed = "Check-out failed.";
             strdata = strdata.mid(checkOutFailed.length(), strdata.length()).trimmed();
-            qDebug() << checkOutFailed +": "+ strdata;
+            qDebug() << checkOutFailed + ": " + strdata;
 
             trayIcon->showMessage(checkOutFailed, strdata, msgIcon, 5 * 1000);
-        } else {
+        }
+        else
+        {
             // Check out success
-            int indexN = strdata.indexOf("Check-out successful",0,Qt::CaseSensitive);
-            QString name = strdata.mid(1,indexN-1).trimmed();
+            int indexN = strdata.indexOf("Check-out successful", 0, Qt::CaseSensitive);
+            QString name = strdata.mid(1, indexN - 1).trimmed();
             strdata = strdata.mid(indexN, strdata.length());
 
             qDebug() << strdata;
@@ -423,29 +453,36 @@ void myUMPSA::checkOutSlot(QNetworkReply *reply)
 void myUMPSA::checkIPChanged()
 {
     QString umpHostUrl = "www.umpsa.edu.my";
-    qDebug() << Q_FUNC_INFO <<": timer call" << QTime::currentTime();
+    qDebug() << Q_FUNC_INFO << ": timer call" << QTime::currentTime();
     this->dnsResolver(umpHostUrl);
 }
 
 void myUMPSA::dnsResults()
 {
-    if (dns->error() != QDnsLookup::NoError ) {
+    if (dns->error() != QDnsLookup::NoError)
+    {
         qWarning() << "DNS lookup failed:" << dns->errorString();
         staff->setIsInUMPSA(false);
         return;
     }
 
     const auto records = dns->hostAddressRecords();
-    for (const QDnsHostAddressRecord &record : records) {
+    for (const QDnsHostAddressRecord &record : records)
+    {
         qDebug() << "Found address:" << record.value().toString();
         staff->setIsInUMPSA(
-            record.value().isInSubnet(QHostAddress::parseSubnet("172.16.0.0/16"))
-            );
+            record.value().isInSubnet(QHostAddress::parseSubnet("172.16.0.0/16")));
     }
 
-    if (staff->isInUMPSA() && !staff->isCheckedIn()) {
+    if (staff->isInUMPSA() && !staff->isCheckedIn())
+    {
         this->checkInUMPSA();
-        //timer needed back when date changes
+        // timer needed back when date changes
+        delete timer;
+    }
+    else if (staff->isCheckedIn())
+    {
+        qDebug() << Q_FUNC_INFO << "alreay check in; delete timer";
         delete timer;
     }
 }
@@ -453,10 +490,9 @@ void myUMPSA::dnsResults()
 void myUMPSA::getCookiesSlot(QNetworkReply *reply)
 {
     QRegularExpression re("[\n\t\r]");
-    if(reply->error())
+    if (reply->error())
     {
         qDebug() << Q_FUNC_INFO << "\n\t :ERROR!" << reply->errorString();
-
     }
     else
     {
@@ -468,7 +504,6 @@ void myUMPSA::getCookiesSlot(QNetworkReply *reply)
         qDebug() << Q_FUNC_INFO << strdata << Qt::endl;
     }
     reply->deleteLater();
-
 }
 
 void myUMPSA::checkedInSlot(QString time)
@@ -478,21 +513,25 @@ void myUMPSA::checkedInSlot(QString time)
     staff->setCheckInTime(checkInTime);
 }
 
-void myUMPSA::attendantSlot(QString time)
+void myUMPSA::attendantSlot(QString time, QString ip, QString location)
 {
     qDebug() << Q_FUNC_INFO;
     QTime checkInTime = QTime::fromString(time, "hh:mm");
-    qDebug() <<"\t" << checkInTime;
+    qDebug() << "\t" << checkInTime;
     staff->setCheckInTime(checkInTime);
+    staff->setIsCheckedIn(true);
 }
 
 void myUMPSA::attendantNotFoundSlot()
 {
-    //check in
+    // check in
     qDebug() << "Not Check in yet";
-    if (staff->isInUMPSA() && staff->autoCheckIn()) {
+    if (staff->isInUMPSA() && staff->autoCheckIn())
+    {
         qDebug() << Q_FUNC_INFO << "in umpsa and autocheck in";
-    } else {
+    }
+    else
+    {
         qDebug() << Q_FUNC_INFO << "not in umpsa";
     }
 }
@@ -513,7 +552,8 @@ void myUMPSA::imsAcademicSlot(QString username, QString sessionId)
 
     QFile jnlpFile(jnlpPath);
     QFile jnlpFileSource(jnlpPathSource);
-    if (!jnlpFileSource.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if (!jnlpFileSource.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
         qWarning() << "Failed to open JNLP file:" << jnlpPathSource;
         return;
     }
@@ -526,18 +566,19 @@ void myUMPSA::imsAcademicSlot(QString username, QString sessionId)
     jnlpContent.replace("HHHHHHHHHH-HHHHH", sessionId);
 
     // Write modified content back to temporary file
-    
-    if (!jnlpFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+
+    if (!jnlpFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
         qWarning() << "Failed to open JNLP file for writing:" << jnlpPath;
         return;
     }
     QTextStream out(&jnlpFile);
     out << jnlpContent;
     jnlpFile.close();
-    // Open the JNLP file with the system's default handler
-    #ifdef Q_OS_WIN
-        QProcess::startDetached("javaws", QStringList() << jnlpPath);
-    #else
-        QDesktopServices::openUrl(QUrl::fromLocalFile(jnlpPath));
-    #endif
+// Open the JNLP file with the system's default handler
+#ifdef Q_OS_WIN
+    QProcess::startDetached("javaws", QStringList() << jnlpPath);
+#else
+    QDesktopServices::openUrl(QUrl::fromLocalFile(jnlpPath));
+#endif
 }
