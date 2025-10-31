@@ -33,6 +33,7 @@
 myUMPSA::myUMPSA(QWidget *parent)
     : QDialog(parent), ui(new Ui::myUMPSA)
 {
+    qDebug() << Q_FUNC_INFO << "\t\t1. Class initialized";
     staff = new Staff();
 
     ui->setupUi(this);
@@ -58,12 +59,15 @@ myUMPSA::myUMPSA(QWidget *parent)
     else
     {
         ecomm = new EcommUMPSA(staff->username(), staff->password());
-        connect(ecomm, &EcommUMPSA::attendantFound, this, &myUMPSA::attendantSlot);
-        connect(ecomm, &EcommUMPSA::attendantNotFound, this, &myUMPSA::attendantNotFoundSlot);
+
         connect(ecomm, &EcommUMPSA::checkInSignal, this, &myUMPSA::checkInSlot);
         connect(ecomm, &EcommUMPSA::checkOutSignal, this, &myUMPSA::checkOutSlot);
         connect(ecomm, &EcommUMPSA::openImsAcademicSignal, this, &myUMPSA::imsAcademicSlot);
-        // connect(ecomm, &EcommUMPSA::saveStaffAttendanceSignal, this, &myUMPSA::checkedInSlot);
+        connect(ecomm, &EcommUMPSA::cookiesCreated, this, &myUMPSA::loginEcomm);
+        connect(ecomm, &EcommUMPSA::loginSucceed, this, &myUMPSA::checkAttendance);
+        connect(ecomm, &EcommUMPSA::attendantFound, this, &myUMPSA::attendantSlot);
+        connect(ecomm, &EcommUMPSA::attendantNotFound, this, &myUMPSA::attendantNotFoundSlot);
+
     }
 }
 
@@ -74,7 +78,7 @@ myUMPSA::~myUMPSA()
 
 void myUMPSA::readSettings()
 {
-    qDebug() << Q_FUNC_INFO << "Read Saved Setting";
+    qDebug() << Q_FUNC_INFO << "\t\t1a. Read Saved Setting";
     QSettings settings;
     QString username;
     QString password;
@@ -120,6 +124,7 @@ void myUMPSA::readSettings()
 
 void myUMPSA::createActions()
 {
+    qDebug() << Q_FUNC_INFO << "\t1b. Create Action";
     login_action = new QAction(tr("Log in &eComm WEB"), this);
     connect(login_action, &QAction::triggered, this, &myUMPSA::loginEcommBrowser);
 
@@ -147,6 +152,7 @@ void myUMPSA::createActions()
 
 void myUMPSA::createTrayIcon()
 {
+    qDebug() << Q_FUNC_INFO << "\t1c. Create Tray Icon";
     trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(login_action);
     trayIconMenu->addAction(checkmemo_action);
@@ -203,6 +209,7 @@ void myUMPSA::writeSettings(bool save_delete)
 
 bool myUMPSA::lookupUMPDNS()
 {
+    qDebug() << Q_FUNC_INFO << "\t\t1d. Determine if in UMPSA";
     QString umpHostUrl = "umpsa.edu.my";
     // Work differently with Apple Private Relay
     QHostInfo umpHost = QHostInfo::fromName(umpHostUrl); // QString("umpsa.edu.my");
@@ -213,8 +220,9 @@ bool myUMPSA::lookupUMPDNS()
         return false;
     }
 
+    // Inside UMPSa Network
     QHostAddress getHost = umpHost.addresses().first();
-    qDebug() << Q_FUNC_INFO << getHost.toString();
+    qDebug() << "\t\t\t\t\t" << getHost.toString();
     return (getHost.isInSubnet(QHostAddress::parseSubnet("172.16.0.0/16")));
 }
 
@@ -333,6 +341,17 @@ void myUMPSA::on_pushButtonSave_clicked()
 
     ecomm = new EcommUMPSA(staff->username(), staff->password());
     connect(ecomm, &EcommUMPSA::attendantFound, this, &myUMPSA::attendantSlot);
+}
+
+void myUMPSA::loginEcomm()
+{
+    ecomm->login();
+}
+
+void myUMPSA::checkAttendance(QString name)
+{
+    staff->setName(name);
+    ecomm->checkAttendance();
 }
 
 void myUMPSA::checkInSlot(QNetworkReply *reply)
@@ -520,6 +539,13 @@ void myUMPSA::attendantSlot(QString time, QString ip, QString location)
     qDebug() << "\t" << checkInTime;
     staff->setCheckInTime(checkInTime);
     staff->setIsCheckedIn(true);
+    //disable menu
+    checkin_action->setEnabled(false);
+    QSystemTrayIcon::MessageIcon msgIcon = QSystemTrayIcon::MessageIcon(1);
+    QString name = staff->name();
+    QString strdata = time;
+    trayIcon->showMessage(name, strdata, msgIcon, 5 * 1000);
+
 }
 
 void myUMPSA::attendantNotFoundSlot()
@@ -538,15 +564,15 @@ void myUMPSA::attendantNotFoundSlot()
 
 void myUMPSA::imsAcademic()
 {
-    qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO << "\t\tx1. Menu IMS Called";
     ecomm->openImsAcademic();
 }
 
 void myUMPSA::imsAcademicSlot(QString username, QString sessionId)
 {
-    qDebug() << Q_FUNC_INFO;
-    qDebug() << "Username:" << username;
-    qDebug() << "Session ID:" << sessionId;
+    qDebug() << Q_FUNC_INFO << "\t\tx1b. Run Java applet";
+    //qDebug() << "Username:" << username;
+    //qDebug() << "Session ID:" << sessionId;
     QString jnlpPath = QCoreApplication::applicationDirPath() + "/../Resources/frmservlet.jnlp";
     QString jnlpPathSource = QCoreApplication::applicationDirPath() + "/../Resources/source.jnlp";
 

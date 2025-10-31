@@ -17,6 +17,7 @@ public:
     // Getters
     QString username() const;
     QString password() const;
+
     bool isInUMPSA() const;
     bool autoCheckIn() const;
     bool disableCheckOut() const;
@@ -37,6 +38,9 @@ public:
     QString sessionId() const;
     void setSessionId(const QString &newSessionId);
 
+    QString name() const;
+    void setName(const QString &newName);
+
 signals:
 
 private:
@@ -44,6 +48,7 @@ private:
     QString m_username;
     QString m_password;
     QString m_sessionId;
+    QString m_name;
 
     // Status flags
     bool m_isInUMPSA = false;

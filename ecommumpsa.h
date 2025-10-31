@@ -5,9 +5,11 @@
 #include <QJsonArray>
 #include <QSslError>
 
+
 class QNetworkAccessManager;
 class QNetworkCookieJar;
 class QNetworkReply;
+class QTimer;
 
 class EcommUMPSA : public QObject
 {
@@ -18,12 +20,15 @@ private:
     QNetworkCookieJar *cookieJar;
     QString user;
     QString pass;
+    bool logedIn = false;
+    QTimer *timer;
     QString extractUsername(const QString &html);
     QJsonArray extractAttendanceData(const QString &html);
     QString getJnlpPath();
     void getInitialCookies();
-    void login(const QString &username, const QString &password);
-    void checkAttendance();
+    void refreshSession();
+
+
 
 private slots:
     void onCookiesSlot();
@@ -35,12 +40,16 @@ private slots:
 
 public:
     explicit EcommUMPSA(QString username, QString password, QObject *parent = nullptr);
+    void login();
+    void checkAttendance();
     void checkInUMPSA();
     void checkOutUMPSA();
     void openPath(QString link);
     void openImsAcademic();
 
 signals:
+    void cookiesCreated();
+    void loginSucceed(QString user);
     void attendantFound(QString time, QString ip, QString location);
     void attendantNotFound();
     void checkInSignal(QNetworkReply *reply);

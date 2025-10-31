@@ -72,6 +72,8 @@ private slots:
     void checkOutUMPSA();
     void imsAcademic();
     void on_pushButtonSave_clicked();
+    void loginEcomm();
+    void checkAttendance(QString name);
 
     // Network response slots
     void checkInSlot(QNetworkReply *reply);

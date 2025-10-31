@@ -13,19 +13,58 @@
 #include <QWebEngineProfile>
 #include <QWebEngineCookieStore>
 #include <QDir>
+#include <QTimer>
 
 EcommUMPSA::EcommUMPSA(QString username, QString password, QObject *parent)
     : QObject{parent}
 {
+    qDebug() << Q_FUNC_INFO;
+    qDebug() << "\t\t\t\t\t3. Class initialized";
     this->user = username;
     this->pass = password;
     cookieJar = new QNetworkCookieJar(this);
     networkManager = new QNetworkAccessManager(this);
     networkManager->setCookieJar(cookieJar);
 
-    this->getInitialCookies(); // Step 1: Fetch cookies from base URL
+    // Step 1: Fetch cookies from base URL
+    this->getInitialCookies();
+
+    // Step 2: Proceed to login
+    /*
+     * this->login();
+     * Called inside onCookiesSlot
+     */
+
+    // Step 3: Check attendance page
+    /*
+     * this->checkAttendance();
+     * called inside onLoginSlot
+     */
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &EcommUMPSA::refreshSession);
+    timer->start(20 * 60000); // 2 minutes
+
 }
 
+void EcommUMPSA::getInitialCookies()
+{
+    qDebug() << Q_FUNC_INFO << "3a. Get Cookies";
+    QUrl url("https://ecomm.ump.edu.my");
+    QNetworkRequest request(url);
+    QNetworkReply *reply = networkManager->get(request);
+
+    connect(reply, &QNetworkReply::finished, this, &EcommUMPSA::onCookiesSlot);
+}
+
+void EcommUMPSA::refreshSession()
+{
+    qDebug() << Q_FUNC_INFO << QTime::currentTime().toString();
+    QString link = "https://ecomm.ump.edu.my/home.jsp";
+    QUrl url = QUrl(link);
+    QNetworkRequest networkRequest(url);
+    networkRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = networkManager->get(networkRequest);
+}
 void EcommUMPSA::checkInUMPSA()
 {
     qDebug() << Q_FUNC_INFO;
@@ -121,12 +160,12 @@ void EcommUMPSA::onCookiesSlot()
     QList<QNetworkCookie> cookies = cookieJar->cookiesForUrl(QUrl("https://ecomm.ump.edu.my"));
     for (const QNetworkCookie &cookie : cookies)
     {
-        qDebug() << "\t" << cookie.toRawForm();
+        //qDebug() << "\t" << cookie.toRawForm();
+        qDebug() << "\t\t\t\t\t" << cookie.value();
+        qDebug() << "\t\t\t\t\t" << cookie.domain();
     }
 
-    // Proceed to login
-    login(user, pass); // Step 2: Replace with actual credentials
-
+    emit cookiesCreated();
     sender()->deleteLater();
 }
 
@@ -139,8 +178,9 @@ void EcommUMPSA::onLoginSlot()
     if (reply->error() == QNetworkReply::NoError)
     {
         QString responseText = reply->readAll();
-        QString user = this->extractUsername(responseText.remove(re));
-        qDebug() << "\t" << "Login successful:" << user;
+        QString name = this->extractUsername(responseText.remove(re));
+        qDebug() << "\t\t\t\t\t" << "Login successful:" << name;
+        emit loginSucceed(name);
     }
     else
     {
@@ -148,9 +188,6 @@ void EcommUMPSA::onLoginSlot()
         reply->deleteLater();
         return;
     }
-
-    // Step 3: Check attendance page
-    this->checkAttendance();
 
     reply->deleteLater();
 }
@@ -172,9 +209,9 @@ void EcommUMPSA::onAttedanceSlot()
             QString checkInIp = obj["ip"].toString();
             QString checkInLocation = obj["location"].toString();
 
-            qDebug() << "Check-in Time:" << checkInTime;
-            qDebug() << "Check-in IP:" << checkInIp;
-            qDebug() << "Check-in Location:" << checkInLocation;
+            qDebug() << "\t\t\t\t Check-in Time:" << checkInTime;
+            qDebug() << "\t\t\t\t Check-in IP:" << checkInIp;
+            qDebug() << "\t\t\t\t Check-in Location:" << checkInLocation;
             // Save the data to a file or database as needed
             //emit saveStaffAttendanceSignal(checkInTime, checkInIp, checkInLocation);
             emit attendantFound(checkInTime, checkInIp, checkInLocation);
@@ -243,6 +280,7 @@ QJsonArray EcommUMPSA::extractAttendanceData(const QString &html)
 
 void EcommUMPSA::checkAttendance()
 {
+    qDebug() << Q_FUNC_INFO << "\t3c. Check Attendance";
     QUrl url("https://ecomm.ump.edu.my/staffAttendance.jsp");
     QNetworkRequest request(url);
     QNetworkReply *reply = networkManager->get(request);
@@ -250,17 +288,11 @@ void EcommUMPSA::checkAttendance()
     connect(reply, &QNetworkReply::finished, this, &EcommUMPSA::onAttedanceSlot);
 }
 
-void EcommUMPSA::getInitialCookies()
-{
-    QUrl url("https://ecomm.ump.edu.my");
-    QNetworkRequest request(url);
-    QNetworkReply *reply = networkManager->get(request);
 
-    connect(reply, &QNetworkReply::finished, this, &EcommUMPSA::onCookiesSlot);
-}
-
-void EcommUMPSA::login(const QString &username, const QString &password)
+void EcommUMPSA::login()
 {
+    qDebug() << Q_FUNC_INFO;
+    qDebug() << "\t\t\t\t\t3b. Log in into ecomm";
     QUrl url("https://ecomm.ump.edu.my");
     url.setPath("/Login");
 
@@ -273,8 +305,8 @@ void EcommUMPSA::login(const QString &username, const QString &password)
     float lon = 103.4277851570105;
 
     QUrlQuery params;
-    params.addQueryItem("userName", username);
-    params.addQueryItem("password", password);
+    params.addQueryItem("userName", this->user);
+    params.addQueryItem("password", this->pass);
     params.addQueryItem("level", "Staff");
     params.addQueryItem("datebefore", dateBefore);
     params.addQueryItem("lat", QString::number(lat));
@@ -286,10 +318,7 @@ void EcommUMPSA::login(const QString &username, const QString &password)
 
 void EcommUMPSA::openImsAcademic()
 {
-    qDebug() << Q_FUNC_INFO;
-
-    // Relogin before request ims
-    this->login(user, pass);
+    qDebug() << Q_FUNC_INFO << "\t\tx1a. Connect to ecomm";
 
     const QString link = "https://ecomm.ump.edu.my/cmsformlink.jsp";
     QUrlQuery urlQuery;

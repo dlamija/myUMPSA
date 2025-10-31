@@ -33,6 +33,7 @@ bool Staff::isInUMPSA() const
 
 void Staff::setIsInUMPSA(bool newIsInUMPSA)
 {
+    qDebug() << Q_FUNC_INFO << "\t2. is in umpsa: " << newIsInUMPSA;
     m_isInUMPSA = newIsInUMPSA;
 }
 
@@ -94,4 +95,14 @@ QString Staff::sessionId() const
 void Staff::setSessionId(const QString &newSessionId)
 {
     m_sessionId = newSessionId;
+}
+
+QString Staff::name() const
+{
+    return m_name;
+}
+
+void Staff::setName(const QString &newName)
+{
+    m_name = newName;
 }

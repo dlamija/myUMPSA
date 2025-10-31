@@ -74,7 +74,7 @@ target_link_libraries(myUMPSA PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERS
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.myUMPSA)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER org.pakciktua.myUMPSA)
 endif()
 set_target_properties(myUMPSA PROPERTIES
     ${BUNDLE_ID_OPTION}
@@ -82,6 +82,15 @@ set_target_properties(myUMPSA PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+)
+# Path to generated Info.plist inside the bundle
+set(myUMPSA_PLIST "${CMAKE_BINARY_DIR}/myUMPSA.app/Contents/Info.plist")
+#message(STATUS "myUMPSA_PLIST = ${myUMPSA_PLIST}")
+# Post-build step: insert LSUIElement
+add_custom_command(TARGET myUMPSA POST_BUILD
+    COMMAND /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "${myUMPSA_PLIST}" || true
+    COMMAND /usr/libexec/PlistBuddy -c "Set :LSUIElement true" "${myUMPSA_PLIST}"
+    COMMENT "Injecting LSUIElement into Info.plist"
 )
 
 include(GNUInstallDirs)
